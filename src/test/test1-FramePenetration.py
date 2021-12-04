@@ -1,4 +1,4 @@
-from FuncAdapter import FramePenetration, AsyncFramePenetration
+from SimilarNeuron import FramePenetration, AsyncFramePenetration
 import asyncio
 
 class Event_A():

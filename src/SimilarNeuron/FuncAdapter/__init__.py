@@ -3,5 +3,6 @@ from .funcAdapter import (
                             AdapterEvent, 
                             AsyncAdapterEvent, 
                             FramePenetration, 
-                            AsyncFramePenetration
+                            AsyncFramePenetration,
+                            Result
                         )

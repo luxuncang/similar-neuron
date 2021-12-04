@@ -1,6 +1,6 @@
 from itertools import product
 import gc
-from typing import Iterable, Iterator, Dict, Union
+from typing import Iterable, Iterator, Dict, Union, Any
 from abc import ABCMeta, abstractmethod
 
 def structure(cls: "GranularMeta", json: bool = False) -> Dict[Union[str, "GranularMeta"], Iterable]:
@@ -13,20 +13,17 @@ def structure(cls: "GranularMeta", json: bool = False) -> Dict[Union[str, "Granu
             return self.iter
         if res:
             return res
-        else:
-            return self
+        return self
 
     def _next(clssub: Iterable) -> Union[dict, list]:
         if isinstance(clssub, container):
             return list(clssub)
-        else:
-            return {i: _next(method(i)) for i in clssub}
+        return {i: _next(method(i)) for i in clssub}
 
     def _next_json(clssub: Iterable) -> Union[dict, list]:
         if isinstance(clssub, container):
             return list(clssub)
-        else:
-            return {str(i): _next_json(method(i)) for i in clssub}
+        return {str(i): _next_json(method(i)) for i in clssub}
 
     if hasattr(cls, "__subclasses__"):
         subclasses = cls.__subclasses__()
@@ -36,15 +33,13 @@ def structure(cls: "GranularMeta", json: bool = False) -> Dict[Union[str, "Granu
         subclasses = cls.iter
     if not json:
         return {cls: _next(subclasses)}
-    else:
-        return {str(cls): _next_json(subclasses)}
+    return {str(cls): _next_json(subclasses)}
 
 def iterproduct(cls: "GranularMeta") -> list:
     granulariter = structure(cls)[cls]
     if len(granulariter) >= 1:
         return granulariter
-    else:
-        return []
+    return []
 
 class container(list):
     pass
@@ -90,20 +85,17 @@ class GranularMeta(ABCMeta):
                 return self.iter
             if res:
                 return res
-            else:
-                return self
+            return self
 
         def _next(clssub: Iterable) -> Union[dict, list]:
             if isinstance(clssub, container):
                 return list(clssub)
-            else:
-                return {i: _next(method(i)) for i in clssub}
+            return {i: _next(method(i)) for i in clssub}
 
         def _next_json(clssub: Iterable) -> Union[dict, list]:
             if isinstance(clssub, container):
                 return list(clssub)
-            else:
-                return {str(i): _next_json(method(i)) for i in clssub}
+            return {str(i): _next_json(method(i)) for i in clssub}
 
         if hasattr(cls, "__subclasses__"):
             subclasses = cls.__subclasses__()
@@ -113,8 +105,7 @@ class GranularMeta(ABCMeta):
             subclasses = cls.iter
         if not json:
             return {cls: _next(subclasses)}
-        else:
-            return {str(cls): _next_json(subclasses)}
+        return {str(cls): _next_json(subclasses)}
 
 class BaseSubstance(metaclass = GranularMeta):
     '''实体抽象基类'''
@@ -130,6 +121,10 @@ class Region(BaseSubstance):
     def remote(self):
         pass
 
+    @abstractmethod
+    def clear(self):
+        pass
+
     def __iter__(self):
         return iter(self.iter)
 
@@ -138,17 +133,23 @@ class BaseRelationship(BaseSubstance):
     pass
 
 class Ordinary(Region):
-    '''域'''
+    '''通用域'''
     
-    def __init__(self, name) -> None:
+    def __init__(self, name: str, subiter: Iterable[Any] = None) -> None:
         self.name = name
-        self.iter = container()
-    
-    def add(self):
-        pass
+        if subiter:
+            self.iter = container(subiter)
+        else:
+            self.iter = container()
 
-    def remote(self):
-        pass
+    def add(self, identification: Any) -> None:
+        self.iter.add(identification)
+
+    def remote(self, identification: Any) -> None:
+        self.iter.remove(identification)
     
+    def clear(self) -> None:
+        self.iter.clear()
+
     def __repr__(self) -> str:
         return self.name

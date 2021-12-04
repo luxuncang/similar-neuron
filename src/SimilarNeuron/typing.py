@@ -3,15 +3,23 @@ from .FuncAdapter import (
                             AdapterEvent, 
                             AsyncAdapterEvent, 
                             FramePenetration, 
-                            AsyncFramePenetration
+                            AsyncFramePenetration,
+                            Result
                         )
 from .Granular import (
-                        structure,
-                        iterproduct,
                         container,
                         BaseSubstance,
                         Region,
                         BaseRelationship,
                         Ordinary
                         )
-from .Listener import get_abc, ABCMetaClass
+from .Listener import ABCMetaClass
+from .exception import (
+                        AnnotationEmpty,
+                        TransformError
+                        )
+from .utils import (
+                    BaseAgreement, 
+                    Switch, 
+                    Agreement
+                    )

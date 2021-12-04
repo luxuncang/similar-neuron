@@ -5,10 +5,10 @@ import inspect
 import asyncio
 
 def abcmodel(self):
-    pass
+    ...
 
 class Result(list):
-    pass
+    ...
 
 # 适配器抽象基类
 class Adapter(ABC):
@@ -16,32 +16,32 @@ class Adapter(ABC):
     @abstractmethod
     def __eventspace__(self) -> Dict[str, Any]:
         '''事件空间'''
-        pass
+        ...
 
     @abstractmethod
     def match(self) -> bool:
         '''触发器匹配'''
-        pass
+        ...
 
     @abstractmethod
     def __call__(self) -> Any:
         '''调用方式'''
-        pass
+        ...
     
     @abstractstaticmethod
     def funcevents(*args, **kwargs) -> List[Callable]:
         '''执行器'''
-        pass
+        ...
 
     @abstractmethod
     def coupler(self) -> Dict:
         '''耦合器'''
-        pass
+        ...
 
     @abstractmethod
     def callback(self) -> Any:
         '''回调方式'''  
-        pass
+        ...
 
     _dependent: Dict[type, Any] = {}
     _coupler: Dict[str, Any] = {}

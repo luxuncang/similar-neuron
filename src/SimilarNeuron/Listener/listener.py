@@ -1,7 +1,7 @@
 from abc import ABC
 
 def abcmodel(self):
-    pass
+    ...
 
 def get_abc(classname : str, abcfunc : dict) -> type:
     '''动态创建抽象基类'''

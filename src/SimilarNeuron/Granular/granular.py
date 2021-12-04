@@ -115,22 +115,22 @@ class Region(BaseSubstance):
 
     @abstractmethod
     def add(self):
-        pass
+        ...
 
     @abstractmethod
     def remote(self):
-        pass
+        ...
 
     @abstractmethod
     def clear(self):
-        pass
+        ...
 
     def __iter__(self):
         return iter(self.iter)
 
 class BaseRelationship(BaseSubstance):
     '''关系基类'''
-    pass
+    ...
 
 class Ordinary(Region):
     '''通用域'''

@@ -6,6 +6,7 @@ _A similar-neuron system in Python world._
 
 > 元梦元宙，无极无穷
 
+ [![CodeFactor](https://www.codefactor.io/repository/github/luxuncang/similar-neuron/badge)](https://www.codefactor.io/repository/github/luxuncang/similar-neuron)
 </div>
 
 ## 体系

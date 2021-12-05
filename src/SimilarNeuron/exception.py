@@ -36,3 +36,12 @@ class SwitchEmptyError(SimilarNeuronException):
         reason: str = 'This `Switch` object not in Agreement.'
         ) -> None:
         super().__init__(name, reason)
+
+class AssignmentError(SimilarNeuronException):
+
+    def __init__(
+        self, 
+        name: str = 'AssignmentError', 
+        reason: str = 'Relationship assignment error.'
+        ) -> None:
+        super().__init__(name, reason)

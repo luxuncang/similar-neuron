@@ -1,8 +1,8 @@
 from .funcAdapter import (
-                            Adapter, 
-                            AdapterEvent, 
-                            AsyncAdapterEvent, 
-                            FramePenetration, 
-                            AsyncFramePenetration,
-                            Result
-                        )
+    Adapter,
+    AdapterEvent,
+    AsyncAdapterEvent,
+    FramePenetration,
+    AsyncFramePenetration,
+    Result
+)

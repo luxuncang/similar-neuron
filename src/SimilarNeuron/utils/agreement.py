@@ -31,7 +31,6 @@ class BaseAgreement(ABC):
         ...
 
 
-
 class Switch(BaseModel):
     '''协议转换'''
     external: Any

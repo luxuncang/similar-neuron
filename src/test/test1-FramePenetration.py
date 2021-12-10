@@ -32,13 +32,12 @@ async def main_4(b: Event_B, c: Event_C):
 e3: Event_C = Event_C()
 
 def receiver(e1: Event_A, e2: Event_B):
-    with FramePenetration(introduce={'e3':e3}) as runfunc:
+    with FramePenetration(introduce={'e3': e3}) as runfunc:
         print(runfunc(main_1, main_2))
 
 async def receiver_async(e1: Event_A, e2: Event_B):
     async with AsyncFramePenetration(e3) as runfunc:
         print(await runfunc(main_3, main_4, concurrent = True))
-
 
 receiver(Event_A(), Event_B())
 asyncio.run(receiver_async(Event_A(), Event_B()))

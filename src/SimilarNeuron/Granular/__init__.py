@@ -4,6 +4,11 @@ from .granular import (
     container,
     BaseSubstance,
     Region,
-    BaseRelationship,
-    Ordinary
+    BaseMapperEvent,
+    BaseRelation,
+    Authenticator,
+    Ordinary,
+    BaseContext,
+    AsyncRelation,
+    Relation
 )

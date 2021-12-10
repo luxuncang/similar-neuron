@@ -45,3 +45,21 @@ class AssignmentError(SimilarNeuronException):
         reason: str = 'Relationship assignment error.'
         ) -> None:
         super().__init__(name, reason)
+
+class InterfaceTypeError(SimilarNeuronException):
+
+    def __init__(
+        self, 
+        name: str = 'InterfaceTypeError', 
+        reason: str = 'Interface type error.'
+        ) -> None:
+        super().__init__(name, reason)
+
+class GranularStateError(SimilarNeuronException):
+
+    def __init__(
+        self, 
+        name: str = 'GranularStateError', 
+        reason: str = 'Granular state error.'
+        ) -> None:
+        super().__init__(name, reason)

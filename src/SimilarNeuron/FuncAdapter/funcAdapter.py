@@ -43,21 +43,21 @@ class Adapter(ABC):
         '''回调方式'''  
         ...
 
-    _dependent: Dict[type, Any] = {}
-    _coupler: Dict[str, Any] = {}
-    _funcevents: List[Callable] = []
 
 # 事件函数基类
 class AdapterEvent(Adapter, BaseModel):
-    
+
+    def __setattr__(self, key, value):
+        self.__dict__[key] = value
+
     def match(self) -> bool:
         return True
 
     def coupler(self) -> dict:
-        return self._coupler
+        return {}
 
     def __eventspace__(self) -> Dict[str, Any]:
-        space = {}
+        space,self._dependent = {}, {}
         frame = inspect.currentframe()
         space.update(frame.f_back.f_back.f_locals)
         self._dependent.update(
@@ -91,7 +91,7 @@ class AdapterEvent(Adapter, BaseModel):
     def _injection(self, func: Callable) -> Dict[type, Any]:
         '''依赖注入'''
         f = inspect.signature(func)
-        return {j.name:self._dependent[j.annotation] for _,j in f.parameters.items()}
+        return {j.name:self._dependent.get(j.annotation) for _,j in f.parameters.items()}
 
     def _callmethod(self, func: Callable) -> Any:
         '''注释类型方法调用'''
@@ -103,21 +103,24 @@ class AdapterEvent(Adapter, BaseModel):
 # 异步事件函数基类
 class AsyncAdapterEvent(Adapter, BaseModel):
     
+    def __setattr__(self, key, value):
+        self.__dict__[key] = value
+
     async def match(self) -> bool:
         return True
 
     async def coupler(self) -> dict:
-        return self._coupler
+        return {}
 
     async def __eventspace__(self) -> Dict[str, Any]:
-        space = {}
+        space,self._dependent = {}, {}
         frame = inspect.currentframe()
         space.update(frame.f_back.f_back.f_locals)
         self._dependent.update(
             {type(j):j for _,j in space.items()}
             )
         self._dependent.update(
-            {type(j):j for _,j in self.dict().items()}
+            {type(j):j for i,j in self.dict().items() if i != '_dependent'}
             )
         T_coupler =  await self._callmethod(self.coupler)
         self._dependent.update(
@@ -126,7 +129,8 @@ class AsyncAdapterEvent(Adapter, BaseModel):
         return space
 
     async def __call__(self) -> Any:
-        print(self.__dict__)
+        self._dependent = {}
+        print(self._dependent, type(self), self.dict())
         await self.__eventspace__()
         if not await self._callmethod(self.match):
             return None
@@ -141,7 +145,7 @@ class AsyncAdapterEvent(Adapter, BaseModel):
 
     async def _injection(self, func: Callable) -> Dict[type, Any]:
         f = inspect.signature(func)
-        return {j.name:self._dependent[j.annotation] for _,j in f.parameters.items()}
+        return {j.name:self._dependent.get(j.annotation) for _,j in f.parameters.items()}
     
     async def _callmethod(self, func: Callable) -> Any:
         return await func(**await self._injection(func))
@@ -158,8 +162,10 @@ class FramePenetration:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def __init__(self, *args, introduce: Dict[str, Any]):
-        space, introduce, self._dependent = {}, {}, {}
+    def __init__(self, *args, introduce: Dict[str, Any] = None):
+        space, self._dependent= {}, {}
+        if not introduce:
+            introduce = {}
         frame = inspect.currentframe()
         space.update(frame.f_back.f_locals)
         self._dependent.update(
@@ -178,7 +184,7 @@ class FramePenetration:
     def _injection(self, func: Callable) -> Dict[type, Any]:
         '''依赖注入'''
         f = inspect.signature(func)
-        return {j.name:self._dependent[j.annotation] for _,j in f.parameters.items()}
+        return {j.name:self._dependent.get(j.annotation) for _,j in f.parameters.items()}
 
     def _callmethod(self, func: Callable) -> Any:
         '''注释类型方法调用'''
@@ -192,8 +198,10 @@ class AsyncFramePenetration:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def __init__(self, *args, introduce: Dict[str, Any]):
-        space, introduce, self._dependent = {}, {}, {}
+    def __init__(self, *args, introduce: Dict[str, Any] = None):
+        space, self._dependent= {}, {}
+        if not introduce:
+            introduce = {}
         frame = inspect.currentframe()
         space.update(frame.f_back.f_locals)
         self._dependent.update(
@@ -214,7 +222,7 @@ class AsyncFramePenetration:
     async def _injection(self, func: Callable) -> Dict[type, Any]:
         '''依赖注入'''
         f = inspect.signature(func)
-        return {j.name:self._dependent[j.annotation] for _,j in f.parameters.items()}
+        return {j.name:self._dependent.get(j.annotation) for _,j in f.parameters.items()}
 
     async def _callmethod(self, func: Callable) -> Any:
         '''注释类型方法调用'''

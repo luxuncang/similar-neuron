@@ -259,8 +259,7 @@ class Authenticator:
             return self.contact.relationship.failure
         elif self.state == State.cooling:
             return self.contact.relationship.cooling
-        else:
-            raise GranularStateError()
+        raise GranularStateError()
 
 class BaseContext(BaseModel):
     '''上下文抽象基类'''
@@ -322,8 +321,7 @@ class BaseMapperEvent(Region):
                 if n < i.relationship.frequency[0]:
                     self.collections.add(k, i, i.relationship.frequency[1])
                     return Authenticator(State.success, i).run()
-                else:
-                    return Authenticator(State.cooling, i).run()
+                return Authenticator(State.cooling, i).run()
         if asyn:
             return AsyncRelation.failure
         return Relation.failure
@@ -344,4 +342,3 @@ class BaseMapperEvent(Region):
     
     def __repr__(self) -> str:
         return self.name
-

@@ -43,20 +43,20 @@ _A similar-neuron system in Python world._
 
 **`Adapter` 是一个事件簇的抽象，根据其依赖的上下文创造出一种调用方式**
 
-![Adapter](docs\FuncAdapter.jpg)
+![Adapter](docs/FuncAdapter.jpg)
 
 * `coupler` 协议转换栈(可选)
 * `match` 事件匹配栈(可选)
 * `funcevnets` 函数事件簇栈(必须)
 * `callback` 回调事件栈(可选)
 
-**exmaple**: [AdapterEvent](src\test\test3-AdapterEvent.py)
+**exmaple**: [AdapterEvent](src/test/test3-AdapterEvent.py)
 
 ### FramePenetration
 
 **`FramePenetration` 是一个自动依赖注入的上下文**
 
-**exmaple**: [FramePenetration](src\test\test1-FramePenetration.py)
+**exmaple**: [FramePenetration](src/test/test1-FramePenetration.py)
 
 ## Granular
 

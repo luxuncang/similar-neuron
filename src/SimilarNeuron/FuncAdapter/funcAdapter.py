@@ -130,7 +130,6 @@ class AsyncAdapterEvent(Adapter, BaseModel):
 
     async def __call__(self) -> Any:
         self._dependent = {}
-        print(self._dependent, type(self), self.dict())
         await self.__eventspace__()
         if not await self._callmethod(self.match):
             return None

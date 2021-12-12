@@ -62,3 +62,5 @@ _A similar-neuron system in Python world._
 ## Granular
 
 *根据**实体**和**约束**进行完备粒度控制，100%控制所有终端实体*
+
+**`Granular` 是 `SimilarNeuron` 的核心，为贯彻古今未来，将宇宙悉数辉映的重要基石，它魅力无限！**

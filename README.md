@@ -8,6 +8,7 @@ _A similar-neuron system in Python world._
 
  [![CodeFactor](https://www.codefactor.io/repository/github/luxuncang/similar-neuron/badge)](https://www.codefactor.io/repository/github/luxuncang/similar-neuron)
  [![GitHub](https://img.shields.io/github/license/luxuncang/similar-neuron)](https://github.com/luxuncang/similar-neuron/blob/master/LICENSE)
+ [![CodeQL](https://github.com/luxuncang/similar-neuron/workflows/CodeQL/badge.svg)](https://github.com/luxuncang/similar-neuron/blob/master/.github/workflows/codeql-analysis.yml)
  
 </div>
 

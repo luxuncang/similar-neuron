@@ -1,6 +1,5 @@
 from SimilarNeuron import Switch, Agreement, BaseSwitch
 from pprint import pprint
-from enum import Enum
 
 class Josn:
     def __init__(self, name: str, age: int):

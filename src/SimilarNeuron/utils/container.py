@@ -1,8 +1,6 @@
 from datetime import datetime, timedelta
 import time
 
-from pydantic.fields import T
-
 class TimeBoundCache():
     '''时限缓存容器'''
 

@@ -42,9 +42,7 @@ class TestEvnet(AdapterEvent):
     def coupler(self, message: MessageChain) -> dict:
         '''协议转换'''
         
-        return {
-            'text': Text(message.message.keys())
-        }
+        return (Text(message.message.keys()), )
     
     def match(self) -> bool:
         '''匹配事件'''

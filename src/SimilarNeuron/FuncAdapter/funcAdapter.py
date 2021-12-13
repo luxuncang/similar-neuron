@@ -4,10 +4,12 @@ from typing import Any, Callable, Dict, List
 import inspect
 import asyncio
 
-def abcmodel(self):
+class Result(list):
+    '''Adapter evnet result'''
     ...
 
-class Result(list):
+class EventName(str):
+    '''Adapter class name'''
     ...
 
 # 适配器抽象基类
@@ -71,6 +73,7 @@ class AdapterEvent(Adapter, BaseModel):
         space,self._dependent = {}, {}
         frame = inspect.currentframe()
         space.update(frame.f_back.f_back.f_locals)
+        self._dependent.update({EventName: self.__class__.__name__})
         self._dependent.update(
             {type(j): j for _, j in space.items()}
         )
@@ -101,12 +104,20 @@ class AdapterEvent(Adapter, BaseModel):
     def _injection(self, func: Callable) -> Dict[type, Any]:
         '''依赖注入'''
         f = inspect.signature(func)
-        return {j.name:self._dependent.get(j.annotation) for _,j in f.parameters.items()}
+        return {j.name: self._dependent.get(j.annotation) or j.default  for _,j in f.parameters.items()}
 
     def _callmethod(self, func: Callable) -> Any:
         '''注释类型方法调用'''
         return func(**self._injection(func))
     
+    def eventspace(self) -> Dict[str, Any]:
+        '''事件空间'''
+        return self._dependent
+
+    def callfunc(self, func: Callable) -> Any:
+        '''调用函数(无感知依赖注入)'''
+        return self._callmethod(func)
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -137,6 +148,7 @@ class AsyncAdapterEvent(Adapter, BaseModel):
         space,self._dependent = {}, {}
         frame = inspect.currentframe()
         space.update(frame.f_back.f_back.f_locals)
+        self._dependent.update({EventName: self.__class__.__name__})
         self._dependent.update(
             {type(j):j for _,j in space.items()}
             )
@@ -165,11 +177,19 @@ class AsyncAdapterEvent(Adapter, BaseModel):
 
     async def _injection(self, func: Callable) -> Dict[type, Any]:
         f = inspect.signature(func)
-        return {j.name:self._dependent.get(j.annotation) for _,j in f.parameters.items()}
+        return {j.name:self._dependent.get(j.annotation) or j.default for _,j in f.parameters.items()}
     
     async def _callmethod(self, func: Callable) -> Any:
         return await func(**await self._injection(func))
     
+    async def eventspace(self) -> Dict[str, Any]:
+        '''事件空间'''
+        return self._dependent
+
+    async def callfunc(self, func: Callable) -> Any:
+        '''调用函数(无感知依赖注入)'''
+        return self._callmethod(func)
+
     class Config:
         arbitrary_types_allowed = True
 

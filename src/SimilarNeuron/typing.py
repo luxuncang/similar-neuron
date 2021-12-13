@@ -4,7 +4,8 @@ from .FuncAdapter import (
     AsyncAdapterEvent,
     FramePenetration,
     AsyncFramePenetration,
-    Result
+    Result,
+    EventName
 )
 from .Granular import (
     container,

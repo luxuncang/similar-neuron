@@ -1,6 +1,5 @@
 '''AdapterEvent example'''
 
-from pydantic.tools import T
 from SimilarNeuron import AdapterEvent, Result
 from typing import Any, List, Callable, Dict, Iterable
 
@@ -20,7 +19,7 @@ class Text():
         self.text = text
     
     def get_text(self):
-        return ''.join(self.text)
+        return ' '.join(self.text)
 
 class TestEvnet(AdapterEvent):
     '''测试事件'''
@@ -55,11 +54,11 @@ class TestEvnet(AdapterEvent):
         '''回调函数'''
         print(f'result: {result}', app, sep = '\n')
 
-# 实例化该事件
-e1 = TestEvnet()
 
 def main(message):
     '''主函数'''
-    e1()
+    TestEvnet().run() # 实例化该事件
 
-main(MessageChain({'a': 1, 'b': 2, 'c': 3}))
+# 循环主函数
+for i in map(main, [MessageChain({'m-001': 1, 'm-002': 2}), MessageChain({'m-003': 3, 'm-004': 4})]):
+    print(i)

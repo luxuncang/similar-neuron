@@ -50,6 +50,17 @@ class AdapterEvent(Adapter, BaseModel):
     def __setattr__(self, key, value):
         self.__dict__[key] = value
 
+    def run(self) -> Any:
+        '''运行方法'''
+        self.__eventspace__()
+        if not self._callmethod(self.match):
+            return None
+        result = Result()
+        for func in self.funcevents():
+            result.append(self._callmethod(func))
+        self._dependent.update({type(result):result})
+        return self._callmethod(self.callback)
+
     def match(self) -> bool:
         return True
 
@@ -67,10 +78,9 @@ class AdapterEvent(Adapter, BaseModel):
             {type(j): j for _, j in self.dict().items()}
         )
         self._dependent.update(
-            {type(j): j for _, j in self._callmethod(
+            {type(i): i for i in self._callmethod(
                 self.coupler
                 )
-                .items()
             }
         )
         return space
@@ -106,6 +116,17 @@ class AsyncAdapterEvent(Adapter, BaseModel):
     def __setattr__(self, key, value):
         self.__dict__[key] = value
 
+    async def run(self) -> Any:
+        self._dependent = {}
+        await self.__eventspace__()
+        if not await self._callmethod(self.match):
+            return None
+        result = Result()
+        for func in await self.funcevents():
+            result.append(await self._callmethod(func))
+        self._dependent.update({type(result):result})
+        return await self._callmethod(self.callback)
+
     async def match(self) -> bool:
         return True
 
@@ -124,7 +145,7 @@ class AsyncAdapterEvent(Adapter, BaseModel):
             )
         T_coupler =  await self._callmethod(self.coupler)
         self._dependent.update(
-            {type(j):j for _,j in T_coupler.items()}
+            {type(i):i for i in T_coupler}
             )
         return space
 

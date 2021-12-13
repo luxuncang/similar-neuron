@@ -27,5 +27,3 @@ class GraiaStarter():
             self.loop.run_forever()
         else:
             self.app.launch_blocking()
-
-        

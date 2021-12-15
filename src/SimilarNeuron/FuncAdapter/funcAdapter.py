@@ -188,7 +188,7 @@ class AsyncAdapterEvent(Adapter, BaseModel):
 
     async def callfunc(self, func: Callable) -> Any:
         '''调用函数(无感知依赖注入)'''
-        return self._callmethod(func)
+        return await self._callmethod(func)
 
     class Config:
         arbitrary_types_allowed = True

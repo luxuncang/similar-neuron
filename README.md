@@ -20,7 +20,7 @@ _A similar-neuron system in Python world._
 
 ## 体系
 
-* [X] FunAdapter
+* [X] FuncAdapter
 * [X] Granular
 * [ ] Listener
 
@@ -31,7 +31,7 @@ _A similar-neuron system in Python world._
 * 执行器(调度器)-轴突
 * 适配器-突触(末梢)
 
-## FunAdapter
+## FuncAdapter
 
 *为了平滑适配接口，提供一个易于解耦的通用适配器，为函数提供一致性的栈空间*
 

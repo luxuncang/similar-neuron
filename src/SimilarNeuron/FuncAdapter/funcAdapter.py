@@ -177,8 +177,13 @@ class AsyncAdapterEvent(Adapter, BaseModel):
 
     async def _injection(self, func: Callable) -> Dict[type, Any]:
         f = inspect.signature(func)
-        return {j.name:self._dependent.get(j.annotation) or j.default for _,j in f.parameters.items()}
-    
+        return {
+            j.name: self._dependent.get(j.annotation)
+            if self._dependent.get(j.annotation) != None
+            else (j.default
+                  if isinstance(j.default, inspect._empty)
+                  else None) for _, j in f.parameters.items()}
+
     async def _callmethod(self, func: Callable) -> Any:
         return await func(**await self._injection(func))
     

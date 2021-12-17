@@ -325,6 +325,20 @@ class BaseMapperEvent(Region):
         if asyn:
             return AsyncRelation.failure
         return Relation.failure
+    
+    def match(self, contact: BaseContext) -> bool:
+        def allmatch(context: BaseContext) -> bool:
+            try:
+                res =  context.rematch(contact = contact)
+                return res
+            except InterfaceTypeError:
+                return False
+        for i in self.iter:
+            res = allmatch(i)
+            if res:
+                return res
+        return False
+
 
     def add(self, *contact: Iterable[BaseContext]) -> None:
         for i in contact:

@@ -292,8 +292,8 @@ class BaseContext(BaseModel):
             raise InterfaceTypeError()
         for k,v in contactdict.items():
             if v not in self.dict()[k]:
-                return False and self.direction
-        return True and self.direction
+                return False == self.direction
+        return True == self.direction
 
     class Config:
         arbitrary_types_allowed = True

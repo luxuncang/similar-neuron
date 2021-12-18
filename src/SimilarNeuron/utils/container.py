@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import time
 
 class TimeBoundCache():
     '''时限缓存容器'''
@@ -16,10 +15,20 @@ class TimeBoundCache():
         self._container.append({'k': k, 'v': v, 'puttime': datetime.now() + timedelta(seconds=t)})
         self._gcCache()
     
+    def updata(self, k, v, timeout : int = None):
+        self.put(k)
+        self.add(k, v, timeout)
+        self._gcCache()
+
     def put(self, k):
         self._container = [i for i in self._container if i['k']!=k]
         self._gcCache()
     
+    def items(self):
+        self._gcCache()
+        for i in self._container:
+            yield i['k'], i['v']
+
     def __len__(self):
         self._gcCache()
         return len(self._container)

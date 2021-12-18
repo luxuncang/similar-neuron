@@ -264,13 +264,14 @@ class Authenticator:
 class BaseContext(BaseModel):
     '''上下文抽象基类'''
     relationship: BaseRelation = Relation()
+    direction: bool = True
     
     @property
     def interfaceType(self) -> Set[Ordinary]:
         return set(
             dictfilter(
                 self.dict(),
-                filterKey = ['relationship'],
+                filterKey = ['relationship', 'direction'],
                 filterValue = [None]
             )
             .keys()
@@ -280,7 +281,7 @@ class BaseContext(BaseModel):
     def filterNone(self) -> Dict[Any, Any]:
         return dictfilter(
             self.dict(),
-            filterKey = ['relationship'],
+            filterKey = ['relationship', 'direction'],
             filterValue=[None]
         )
 
@@ -291,8 +292,8 @@ class BaseContext(BaseModel):
             raise InterfaceTypeError()
         for k,v in contactdict.items():
             if v not in self.dict()[k]:
-                return False
-        return True
+                return False and self.direction
+        return True and self.direction
 
     class Config:
         arbitrary_types_allowed = True

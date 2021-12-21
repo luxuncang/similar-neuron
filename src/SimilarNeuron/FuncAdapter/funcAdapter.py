@@ -58,7 +58,7 @@ class AdapterEvent(Adapter, BaseModel):
         if not self._callmethod(self.match):
             return None
         result = Result()
-        for func in self.funcevents():
+        for func in self._callmethod(self.funcevents):
             result.append(self._callmethod(func))
         self._dependent.update({type(result):result})
         return self._callmethod(self.callback)
@@ -93,7 +93,7 @@ class AdapterEvent(Adapter, BaseModel):
         if not self._callmethod(self.match):
             return None
         result = Result()
-        for func in self.funcevents():
+        for func in self._callmethod(self.funcevents()):
             result.append(self._callmethod(func))
         self._dependent.update({type(result):result})
         return self._callmethod(self.callback)
@@ -118,6 +118,15 @@ class AdapterEvent(Adapter, BaseModel):
         '''调用函数(无感知依赖注入)'''
         return self._callmethod(func)
 
+    def addeventspace(self, *introduce) -> None:
+        '''添加事件空间'''
+        self._dependent.update({type(i): i for i in introduce})
+
+    def removeeventspace(self, *remove) -> None:
+        '''移除事件空间'''
+        for i in remove:
+            self._dependent.pop(type(i))
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -133,7 +142,7 @@ class AsyncAdapterEvent(Adapter, BaseModel):
         if not await self._callmethod(self.match):
             return None
         result = Result()
-        for func in await self.funcevents():
+        for func in await self._callmethod(self.funcevents):
             result.append(await self._callmethod(func))
         self._dependent.update({type(result):result})
         return await self._callmethod(self.callback)
@@ -167,7 +176,7 @@ class AsyncAdapterEvent(Adapter, BaseModel):
         if not await self._callmethod(self.match):
             return None
         result = Result()
-        for func in await self.funcevents():
+        for func in await self._callmethod(self.funcevents):
             result.append(await self._callmethod(func))
         self._dependent.update({type(result):result})
         return await self._callmethod(self.callback)
@@ -194,6 +203,15 @@ class AsyncAdapterEvent(Adapter, BaseModel):
     async def callfunc(self, func: Callable) -> Any:
         '''调用函数(无感知依赖注入)'''
         return await self._callmethod(func)
+
+    async def addeventspace(self, *introduce) -> None:
+        '''添加事件空间'''
+        self._dependent.update({type(i): i for i in introduce})
+
+    async def removeeventspace(self, *remove) -> None:
+        '''移除事件空间'''
+        for i in remove:
+            self._dependent.pop(type(i))
 
     class Config:
         arbitrary_types_allowed = True

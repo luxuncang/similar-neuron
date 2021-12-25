@@ -8,7 +8,6 @@ from .FuncAdapter import (
     EventName
 )
 from .Granular import (
-    container,
     BaseSubstance,
     Region,
     BaseMapperEvent,

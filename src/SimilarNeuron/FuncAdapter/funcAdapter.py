@@ -6,7 +6,10 @@ import asyncio
 
 class Result(list):
     '''Adapter evnet result'''
-    ...
+    
+    def first(self):
+        '''Return first result'''
+        return self[0]
 
 class EventName(str):
     '''Adapter class name'''

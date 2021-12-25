@@ -1,11 +1,8 @@
-import gc, sys, os, json, asyncio, time
-from enum import Enum
+import gc, sys, os, json
 from itertools import product, combinations
-from typing import Callable, Iterable, Iterator, Dict, Tuple, Union, Any, Set, List, Optional
-from abc import ABC, ABCMeta, abstractmethod, abstractstaticmethod
-from pydantic import BaseModel
-from ..exception import InterfaceTypeError, GranularStateError
-from ..utils import dictfilter, TimeBoundCache
+from typing import Iterable, Iterator, Dict, Tuple, Union, Any, Set
+from abc import ABCMeta, abstractmethod
+from .condition import Container
 
 mainfile = os.path.split(sys.argv[0])[0]
 
@@ -22,12 +19,12 @@ def structure(cls: "GranularMeta", json: bool = False) -> Dict[Union[str, "Granu
         return self
 
     def _next(clssub: Iterable) -> Union[dict, list]:
-        if isinstance(clssub, container):
+        if isinstance(clssub, Container):
             return list(clssub)
         return {i: _next(method(i)) for i in clssub}
 
     def _next_json(clssub: Iterable) -> Union[dict, list]:
-        if isinstance(clssub, container):
+        if isinstance(clssub, Container):
             return list(clssub)
         return {str(i): _next_json(method(i)) for i in clssub}
 
@@ -46,15 +43,6 @@ def iterproduct(cls: "GranularMeta") -> Union[dict, list]:
     if len(granulariter) >= 1:
         return granulariter
     return list(cls)
-
-class State(str, Enum):
-    '''状态'''
-    success = 'success'
-    fail = 'fail'
-    cooling = 'cooling'
-
-class container(list):
-    pass
 
 class GranularMeta(ABCMeta):
     '''实体抽象元类'''
@@ -120,12 +108,12 @@ class GranularMeta(ABCMeta):
             return self
 
         def _next(clssub: Iterable) -> Union[dict, list]:
-            if isinstance(clssub, container):
+            if isinstance(clssub, Container):
                 return list(clssub)
             return {i: _next(method(i)) for i in clssub}
 
         def _next_json(clssub: Iterable) -> Union[dict, list]:
-            if isinstance(clssub, container):
+            if isinstance(clssub, Container):
                 return list(clssub)
             return {str(i): _next_json(method(i)) for i in clssub}
 
@@ -157,7 +145,7 @@ class Region(BaseSubstance):
         ...
 
     @abstractmethod
-    def remote(self):
+    def remove(self):
         ...
 
     @abstractmethod
@@ -170,184 +158,25 @@ class Region(BaseSubstance):
 class Ordinary(Region):
     '''通用域'''
     
-    def __init__(self, name: str, subiter: Iterable[Any] = None) -> None:
+    def __init__(self, name: str, subiter: Iterable[Any] = None, reference: bool = False) -> None:
         self.name = name
         if subiter:
-            self.iter = container(subiter)
+            self.iter = Container(subiter)
         else:
-            self.iter = container()
+            self.iter = Container()
+        if reference:
+            setattr(self.__class__, name, self)
 
     def add(self, *identification: Iterable[Any]) -> None:
         for i in identification:
             self.iter.append(i)
 
-    def remote(self, *identification: Iterable[Any]) -> None:
+    def remove(self, *identification: Iterable[Any]) -> None:
         for i in identification:
-            self.iter.remove(i)
-    
-    def clear(self) -> None:
-        self.iter.clear()
-    
-    def __str__(self) -> str:
-        return self.name
-    
-    def __repr__(self) -> str:
-        return self.name
-
-class BaseRelation(ABC):
-    '''关系抽象基类'''
-
-    @abstractmethod
-    def success(self) -> bool:
-        ...
-
-    @abstractstaticmethod
-    def failure() -> bool:
-        ...
-    
-    @abstractmethod
-    def cooling(self) -> None:
-        ...
-
-class Relation(BaseRelation):
-    '''权鉴关系'''
-
-    def __init__(self, frequency: Tuple[int, int] = (1, 0), delayed: int = 0) -> None:
-        self.frequency = frequency # n/s 
-        self.delayed = delayed
-
-    def cooling(self) -> None:
-        ...
-
-    def success(self) -> bool:
-        time.sleep(self.delayed)
-        return True
-    
-    @staticmethod
-    def failure() -> bool:
-        return False
-
-class AsyncRelation(BaseRelation):
-    '''权鉴关系'''
-
-    def __init__(self, frequency: Tuple[int, int] = (1, 0), delayed: int = 0) -> None:
-        self.frequency = frequency
-        self.delayed = delayed
-
-    async def cooling(self) -> None:
-        ...
-
-    async def success(self) -> bool:
-        await asyncio.sleep(self.delayed)
-        return True
-    
-    @staticmethod
-    async def failure() -> bool:
-        return False
-
-class Authenticator:
-    '''验证器'''
-
-    def __init__(self, state: State, contact: "BaseContext") -> None:
-        self.state = state
-        self.contact = contact
-    
-    def run(self):
-        if self.state == State.success:
-            return self.contact.relationship.success
-        elif self.state == State.fail:
-            return self.contact.relationship.failure
-        elif self.state == State.cooling:
-            return self.contact.relationship.cooling
-        raise GranularStateError()
-
-class BaseContext(BaseModel):
-    '''上下文抽象基类'''
-    relationship: BaseRelation = Relation()
-    direction: bool = True
-    
-    @property
-    def interfaceType(self) -> Set[Ordinary]:
-        return set(
-            dictfilter(
-                self.dict(),
-                filterKey = ['relationship', 'direction'],
-                filterValue = [None]
-            )
-            .keys()
-        )
-
-    @property
-    def filterNone(self) -> Dict[Any, Any]:
-        return dictfilter(
-            self.dict(),
-            filterKey = ['relationship', 'direction'],
-            filterValue=[None]
-        )
-
-    def rematch(self, contact: "BaseContext") -> bool:
-        '''匹配'''
-        contactdict:dict = contact.filterNone
-        if self.interfaceType != set(contactdict.keys()):
-            raise InterfaceTypeError()
-        for k,v in contactdict.items():
-            if v not in self.dict()[k]:
-                return False == self.direction
-        return True == self.direction
-
-    class Config:
-        arbitrary_types_allowed = True
-
-class BaseMapperEvent(Region):
-    '''关系映射器基类'''
-
-    def __init__(self, name: str, region: Region, contact: List[BaseContext]):
-        self.name = name
-        self.region = region
-        self.iter: container[BaseContext] = container(contact)
-        self.collections = TimeBoundCache(10)
-    
-    def rematch(self, contact: BaseContext, asyn: bool = False) -> Callable:
-        def allmatch(context: BaseContext) -> bool:
             try:
-                res =  context.rematch(contact = contact)
-                return res
-            except InterfaceTypeError:
-                return False
-        for i in self.iter:
-            res = allmatch(i)
-            if res:
-                k = i.interfaceType
-                n = len(self.collections[k])
-                if n < i.relationship.frequency[0]:
-                    self.collections.add(k, i, i.relationship.frequency[1])
-                    return Authenticator(State.success, i).run()
-                return Authenticator(State.cooling, i).run()
-        if asyn:
-            return AsyncRelation.failure
-        return Relation.failure
-    
-    def match(self, contact: BaseContext) -> bool:
-        def allmatch(context: BaseContext) -> bool:
-            try:
-                res =  context.rematch(contact = contact)
-                return res
-            except InterfaceTypeError:
-                return False
-        for i in self.iter:
-            res = allmatch(i)
-            if res:
-                return res
-        return False
-
-
-    def add(self, *contact: Iterable[BaseContext]) -> None:
-        for i in contact:
-            self.iter.append(i)
-
-    def remote(self, *contact: Iterable[BaseContext]) -> None:
-        for i in contact:
-            self.iter.remove(i)
+                self.iter.remove(i)
+            except ValueError:
+                raise ValueError(f"{i} not in {self.name}")
     
     def clear(self) -> None:
         self.iter.clear()

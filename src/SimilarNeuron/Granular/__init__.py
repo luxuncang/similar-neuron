@@ -1,13 +1,14 @@
 from .granular import (
     structure,
     iterproduct,
-    container,
     BaseSubstance,
     Region,
+    Ordinary
+)
+from .constraint import (
     BaseMapperEvent,
     BaseRelation,
     Authenticator,
-    Ordinary,
     BaseContext,
     AsyncRelation,
     Relation

@@ -10,7 +10,6 @@ from .FuncAdapter import (
 from .Granular import (
     structure,
     iterproduct,
-    container,
     BaseSubstance,
     Region,
     BaseMapperEvent,

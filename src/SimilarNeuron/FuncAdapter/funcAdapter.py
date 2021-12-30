@@ -4,6 +4,8 @@ from typing import Any, Callable, Dict, List
 import inspect
 import asyncio
 
+from ..exception import AnnotationEmpty
+
 class Result(list):
     '''Adapter evnet result'''
     
@@ -48,6 +50,22 @@ class Adapter(ABC):
         '''回调方式'''  
         ...
 
+    @staticmethod
+    def paramdefault(default) -> Any:
+        '''默认参数'''
+        if default == inspect.Parameter.empty:
+            return None
+        return default
+
+class Frame(ABC):
+    '''Frame'''
+
+    @staticmethod
+    def paramdefault(default) -> Any:
+        '''默认参数'''
+        if default == inspect.Parameter.empty:
+            return None
+        return default
 
 # 事件函数基类
 class AdapterEvent(Adapter, BaseModel):
@@ -106,8 +124,14 @@ class AdapterEvent(Adapter, BaseModel):
 
     def _injection(self, func: Callable) -> Dict[type, Any]:
         '''依赖注入'''
+        res = {}
         f = inspect.signature(func)
-        return {j.name: self._dependent.get(j.annotation) or j.default  for _,j in f.parameters.items()}
+        for name, param in f.parameters.items():
+            if param.annotation != inspect.Parameter.empty:
+                res[name] = self._dependent.get(param.annotation) if not self._dependent.get(param.annotation) is None else self.paramdefault(param.default)
+            else:
+                raise AnnotationEmpty(reason = f'{name} annotation is empty!')
+        return res
 
     def _callmethod(self, func: Callable) -> Any:
         '''注释类型方法调用'''
@@ -188,13 +212,15 @@ class AsyncAdapterEvent(Adapter, BaseModel):
         pass
 
     async def _injection(self, func: Callable) -> Dict[type, Any]:
+        '''依赖注入'''
+        res = {}
         f = inspect.signature(func)
-        return {
-            j.name: self._dependent.get(j.annotation)
-            if self._dependent.get(j.annotation) != None
-            else (j.default
-                  if isinstance(j.default, inspect._empty)
-                  else None) for _, j in f.parameters.items()}
+        for name, param in f.parameters.items():
+            if param.annotation != inspect.Parameter.empty:
+                res[name] = self._dependent.get(param.annotation) if not self._dependent.get(param.annotation) is None else self.paramdefault(param.default)
+            else:
+                raise AnnotationEmpty(reason = f'{name} annotation is empty!')
+        return res
 
     async def _callmethod(self, func: Callable) -> Any:
         return await func(**await self._injection(func))
@@ -220,7 +246,7 @@ class AsyncAdapterEvent(Adapter, BaseModel):
         arbitrary_types_allowed = True
 
 # frame 穿透依赖注入
-class FramePenetration:
+class FramePenetration(Frame):
 
     def __enter__(self) -> "FramePenetration":
         return self
@@ -249,14 +275,20 @@ class FramePenetration:
 
     def _injection(self, func: Callable) -> Dict[type, Any]:
         '''依赖注入'''
+        res = {}
         f = inspect.signature(func)
-        return {j.name:self._dependent.get(j.annotation) for _,j in f.parameters.items()}
+        for name, param in f.parameters.items():
+            if param.annotation != inspect.Parameter.empty:
+                res[name] = self._dependent.get(param.annotation) if not self._dependent.get(param.annotation) is None else self.paramdefault(param.default)
+            else:
+                raise AnnotationEmpty(reason = f'{name} annotation is empty!')
+        return res
 
     def _callmethod(self, func: Callable) -> Any:
         '''注释类型方法调用'''
         return func(**self._injection(func))
 
-class AsyncFramePenetration:
+class AsyncFramePenetration(Frame):
 
     async def __aenter__(self) -> "AsyncFramePenetration":
         return self
@@ -287,9 +319,16 @@ class AsyncFramePenetration:
 
     async def _injection(self, func: Callable) -> Dict[type, Any]:
         '''依赖注入'''
+        res = {}
         f = inspect.signature(func)
-        return {j.name:self._dependent.get(j.annotation) for _,j in f.parameters.items()}
+        for name, param in f.parameters.items():
+            if param.annotation != inspect.Parameter.empty:
+                res[name] = self._dependent.get(param.annotation) if not self._dependent.get(param.annotation) is None else self.paramdefault(param.default)
+            else:
+                raise AnnotationEmpty(reason = f'{name} annotation is empty!')
+        return res
 
     async def _callmethod(self, func: Callable) -> Any:
         '''注释类型方法调用'''
         return await func(**await self._injection(func))
+    

@@ -1,6 +1,7 @@
+from SimilarNeuron.FuncAdapter.funcAdapter import Result
 from pydantic import BaseModel
 from abc import ABC, abstractmethod, abstractstaticmethod
-from typing import Callable, Dict, Tuple, Any, Set, List
+from typing import Callable, Iterable, Iterator, Dict, Tuple, Union, Any, Set, List, Optional
 import asyncio, time
 
 from ..exception import InterfaceTypeError, GranularStateError
@@ -97,7 +98,7 @@ class BaseContext(BaseModel):
         return dictfilter(
             self.dict(),
             filterKey = ['relationship', 'direction', 'name'],
-            filterValue = [None]
+            filterValue=[None]
         )
 
     def rematch(self, contact: "BaseContext") -> bool:
@@ -109,6 +110,17 @@ class BaseContext(BaseModel):
             if v not in self.dict()[k]:
                 return False == self.direction
         return True == self.direction
+
+    def location(self, contact: "BaseContext") -> Union[bool, "BaseContext"]:
+        '''定位'''
+        contactdict:dict = contact.filterNone
+        for k,v in contactdict.items():
+            if not k in self.filterNone:
+                raise InterfaceTypeError()
+        for k,v in contactdict.items():
+            if not v in self.dict()[k]:
+                raise InterfaceTypeError()
+        return self
 
     class Config:
         arbitrary_types_allowed = True
@@ -154,4 +166,18 @@ class BaseMapperEvent(Ordinary):
             if res:
                 return res
         return False
+    
+    def location(self, contact: BaseContext) -> Union[bool, BaseContext]:
+        result = []
+        def allmatch(context: BaseContext) -> bool:
+            try:
+                res =  context.location(contact = contact)
+                return res
+            except InterfaceTypeError:
+                ...
+        for i in self.iter:
+            res = allmatch(i)
+            if res:
+                result.append(res)
+        return result
 

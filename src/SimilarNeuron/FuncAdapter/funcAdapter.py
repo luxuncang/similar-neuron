@@ -50,6 +50,13 @@ class Adapter(ABC):
         '''回调方式'''  
         ...
 
+    def findtype(self, cls: str) -> Any:
+        '''查找类型'''
+        for i in self._dependent.keys():
+            if i.__name__ == cls:
+                return i
+        return cls
+
     @staticmethod
     def paramdefault(default) -> Any:
         '''默认参数'''
@@ -59,6 +66,13 @@ class Adapter(ABC):
 
 class Frame(ABC):
     '''Frame'''
+
+    def findtype(self, cls: str) -> Any:
+        '''查找类型'''
+        for i in self._dependent.keys():
+            if i.__name__ == cls:
+                return i
+        return cls
 
     @staticmethod
     def paramdefault(default) -> Any:
@@ -127,8 +141,11 @@ class AdapterEvent(Adapter, BaseModel):
         res = {}
         f = inspect.signature(func)
         for name, param in f.parameters.items():
-            if param.annotation != inspect.Parameter.empty:
-                res[name] = self._dependent.get(param.annotation) if not self._dependent.get(param.annotation) is None else self.paramdefault(param.default)
+            pat = param.annotation
+            if pat != inspect.Parameter.empty:
+                if isinstance(pat, str):
+                    pat = self.findtype(pat)
+                res[name] = self._dependent.get(pat) if not self._dependent.get(pat) is None else self.paramdefault(param.default)
             else:
                 raise AnnotationEmpty(reason = f'{name} annotation is empty!')
         return res
@@ -216,8 +233,11 @@ class AsyncAdapterEvent(Adapter, BaseModel):
         res = {}
         f = inspect.signature(func)
         for name, param in f.parameters.items():
-            if param.annotation != inspect.Parameter.empty:
-                res[name] = self._dependent.get(param.annotation) if not self._dependent.get(param.annotation) is None else self.paramdefault(param.default)
+            pat = param.annotation
+            if pat != inspect.Parameter.empty:
+                if isinstance(pat, str):
+                    pat = self.findtype(pat)
+                res[name] = self._dependent.get(pat) if not self._dependent.get(pat) is None else self.paramdefault(param.default)
             else:
                 raise AnnotationEmpty(reason = f'{name} annotation is empty!')
         return res
@@ -278,8 +298,11 @@ class FramePenetration(Frame):
         res = {}
         f = inspect.signature(func)
         for name, param in f.parameters.items():
-            if param.annotation != inspect.Parameter.empty:
-                res[name] = self._dependent.get(param.annotation) if not self._dependent.get(param.annotation) is None else self.paramdefault(param.default)
+            pat = param.annotation
+            if pat != inspect.Parameter.empty:
+                if isinstance(pat, str):
+                    pat = self.findtype(pat)
+                res[name] = self._dependent.get(pat) if not self._dependent.get(pat) is None else self.paramdefault(param.default)
             else:
                 raise AnnotationEmpty(reason = f'{name} annotation is empty!')
         return res
@@ -322,8 +345,11 @@ class AsyncFramePenetration(Frame):
         res = {}
         f = inspect.signature(func)
         for name, param in f.parameters.items():
-            if param.annotation != inspect.Parameter.empty:
-                res[name] = self._dependent.get(param.annotation) if not self._dependent.get(param.annotation) is None else self.paramdefault(param.default)
+            pat = param.annotation
+            if pat != inspect.Parameter.empty:
+                if isinstance(pat, str):
+                    pat = self.findtype(pat)
+                res[name] = self._dependent.get(pat) if not self._dependent.get(pat) is None else self.paramdefault(param.default)
             else:
                 raise AnnotationEmpty(reason = f'{name} annotation is empty!')
         return res

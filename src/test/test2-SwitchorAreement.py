@@ -27,8 +27,6 @@ class PersonToJson(BaseSwitch):
     def transform(cls, person: Person) -> Josn:
         return Josn(person.name, person.age)    
 
-
-
 TOgo = Agreement(JsonToPerson, PersonToJson, Switch(int, str, lambda x: str(x)))
 
 print(JsonToPerson.internal)
@@ -36,5 +34,3 @@ print(JsonToPerson.transformation(Josn(name="John", age=30), judge=True))
 print(JsonToPerson.get_agreement())
 pprint(TOgo.transformation(Josn(name="John", age=30), Person, judge=True))
 pprint(TOgo.transformation(Person(name="John", age=30), Josn, judge=True))
-
-

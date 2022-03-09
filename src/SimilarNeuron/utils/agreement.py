@@ -41,12 +41,14 @@ class BaseSwitch(ABC):
     @abstractclassmethod
     def transform(cls, external: Any) -> Any:
         ...
-
+        
     @classmethod
     def transformation(cls, external: Any, judge: bool = False) -> Any:
         if judge:  # 严格模式
             res = cls.transform(external)
-            if isinstance(res, cls.internal):
+            if isinstance(cls.internal, str) and type(res).__name__ == cls.internal:
+                return res
+            elif (not isinstance(cls.internal, str)) and isinstance(res, cls.internal):
                 return res
             raise TransformError()
         return cls.transform(external)
@@ -54,6 +56,7 @@ class BaseSwitch(ABC):
     @classmethod
     def get_agreement(cls) -> Dict[str, Any]:
         return {'external': cls.external, 'internal': cls.internal, 'transform': cls.transform}
+
 
 class Switch(BaseModel):
     '''协议转换'''
@@ -67,13 +70,18 @@ class Switch(BaseModel):
     def transformation(self, external: Any, judge: bool = False) -> Any:
         if judge:  # 严格模式
             res = self.transform(external)
-            if isinstance(res, self.internal):
+            if isinstance(self.internal, str) and type(res).__name__ == self.internal:
+                return res
+            elif (not isinstance(self.internal, str)) and isinstance(res, self.internal):
                 return res
             raise TransformError()
         return self.transform(external)
 
     def get_agreement(self) -> Dict[str, Any]:
         return self.dict()
+    
+    def __hash__(self):
+        return hash((self.external, self.internal, self.transform))
 
 
 class Agreement(BaseAgreement):
@@ -88,13 +96,33 @@ class Agreement(BaseAgreement):
             external: Any,
             internal: Any,
             judge: bool = False) -> Any:
-        try:
-            return self.agreemap[(type(external), internal)].transformation(external, judge)
-        except KeyError:
-            raise SwitchEmptyError()
+
+        return self.find_agreement(external, internal).transformation(external, judge)
 
     def get_agreement(self) -> List[Dict[Any, Any]]:
-        return [i.get_agreement() for i in self.agreemap.values()]
+        return [{'switch': i , **i.get_agreement()} for i in self.agreemap.values()]
+
+    def find_agreement(self, external: Any, internal: Any) -> Union[Switch, BaseSwitch]: # 可以改进
+
+        type_external = type(external)
+        res = self.agreemap.get((type(external), internal)) # 已存在
+        if res:
+            return res
+        agreements = self.get_agreement()
+        temp_a = [i['switch'] for i in agreements if i['external'] == type_external]
+        temp_b = [i['switch'] for i in agreements if (not isinstance(i['external'], str)) and i['external'].__name__ == type_external.__name__]
+        temp_c = [i['switch'] for i in agreements if isinstance(i['external'], str) and i['external'] == type_external.__name__]
+        ex_temp = temp_a + temp_b + temp_c
+        print(ex_temp)
+        ex_temp = set(ex_temp)
+        temp_a = set([i['switch'] for i in agreements if i['internal'] == internal])
+        temp_b = set([i['switch'] for i in agreements if (not isinstance(i['internal'], str)) and i['internal'].__name__ == internal])
+        temp_c = set([i['switch'] for i in agreements if isinstance(i['internal'], str) and (not isinstance(internal, str)) and i['internal'] == internal.__name__])
+        in_temp = temp_a | temp_b | temp_c
+        temp = ex_temp & in_temp
+        if temp:
+            return temp.pop()
+        raise SwitchEmptyError()
 
     def add(self, agreemap: Union[Switch, BaseSwitch]):
         self.agreemap.update(

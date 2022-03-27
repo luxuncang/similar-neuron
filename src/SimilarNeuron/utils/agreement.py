@@ -101,11 +101,21 @@ class Agreement(BaseAgreement):
 
     def get_agreement(self) -> List[Dict[Any, Any]]:
         return [{'switch': i , **i.get_agreement()} for i in self.agreemap.values()]
+    
+    def get_switch(self, external: Any, internal: Any) -> Union[Switch, BaseSwitch]:
+        type_external = type(external)
+        res = self.agreemap.get((type_external, internal))
+        if res:
+            return res
+        for k, v in self.agreemap.items():
+            if not isinstance(k[0], str) and not isinstance(k[1], str):
+                if ((isinstance(external, k[0]) or external == k[0] and isinstance(internal, k[1]) or internal == k[1])):
+                    return v
 
     def find_agreement(self, external: Any, internal: Any) -> Union[Switch, BaseSwitch]: # 可以改进
 
         type_external = type(external)
-        res = self.agreemap.get((type(external), internal)) # 已存在
+        res = self.get_switch(external, internal) # 已存在
         if res:
             return res
         agreements = self.get_agreement()
@@ -113,7 +123,6 @@ class Agreement(BaseAgreement):
         temp_b = [i['switch'] for i in agreements if (not isinstance(i['external'], str)) and i['external'].__name__ == type_external.__name__]
         temp_c = [i['switch'] for i in agreements if isinstance(i['external'], str) and i['external'] == type_external.__name__]
         ex_temp = temp_a + temp_b + temp_c
-        print(ex_temp)
         ex_temp = set(ex_temp)
         temp_a = set([i['switch'] for i in agreements if i['internal'] == internal])
         temp_b = set([i['switch'] for i in agreements if (not isinstance(i['internal'], str)) and i['internal'].__name__ == internal])
@@ -122,7 +131,7 @@ class Agreement(BaseAgreement):
         temp = ex_temp & in_temp
         if temp:
             return temp.pop()
-        raise SwitchEmptyError()
+        raise SwitchEmptyError(reason=f'This Switch<{external} {internal}> object not in Agreement.')
 
     def add(self, agreemap: Union[Switch, BaseSwitch]):
         self.agreemap.update(

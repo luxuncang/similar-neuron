@@ -133,6 +133,12 @@ class Agreement(BaseAgreement):
             return temp.pop()
         raise SwitchEmptyError(reason=f'This Switch<{type_external} {internal}> object not in Agreement.')
 
+    def update(self, agreemap: "Agreement", direction: bool = True):
+        if direction:
+            self.agreemap.update(agreemap.agreemap)
+        else:
+            self.agreemap = {**agreemap.agreemap, **self.agreemap}
+
     def add(self, agreemap: Union[Switch, BaseSwitch]):
         self.agreemap.update(
             {(agreemap.external, agreemap.internal): agreemap})

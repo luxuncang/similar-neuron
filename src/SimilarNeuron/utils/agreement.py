@@ -131,7 +131,7 @@ class Agreement(BaseAgreement):
         temp = ex_temp & in_temp
         if temp:
             return temp.pop()
-        raise SwitchEmptyError(reason=f'This Switch<{external} {internal}> object not in Agreement.')
+        raise SwitchEmptyError(reason=f'This Switch<{type_external} {internal}> object not in Agreement.')
 
     def add(self, agreemap: Union[Switch, BaseSwitch]):
         self.agreemap.update(

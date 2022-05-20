@@ -58,5 +58,5 @@ def main(message):
     TestEvnet().run() # 实例化该事件
 
 # 循环主函数
-for i in map(main, [MessageChain({'m-001': 1, 'm-002': 2}), MessageChain({'m-003': 3, 'm-004': 4})]):
+for _ in map(main, [MessageChain({'m-001': 1, 'm-002': 2}), MessageChain({'m-003': 3, 'm-004': 4})]):
     ...

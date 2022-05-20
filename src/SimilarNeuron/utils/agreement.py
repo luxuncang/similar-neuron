@@ -39,7 +39,7 @@ class BaseSwitch(ABC):
     internal: Any
 
     @abstractclassmethod
-    def transform(cls, external: Any) -> Any:
+    def transform(self, external: Any) -> Any:
         ...
         
     @classmethod
@@ -104,19 +104,29 @@ class Agreement(BaseAgreement):
     
     def get_switch(self, external: Any, internal: Any) -> Union[Switch, BaseSwitch]:
         type_external = type(external)
-        res = self.agreemap.get((type_external, internal))
-        if res:
+        if res := self.agreemap.get((type_external, internal)):
             return res
         for k, v in self.agreemap.items():
-            if not isinstance(k[0], str) and not isinstance(k[1], str):
-                if ((isinstance(external, k[0]) or external == k[0] and isinstance(internal, k[1]) or internal == k[1])):
-                    return v
+            if (
+                not isinstance(k[0], str)
+                and not isinstance(k[1], str)
+                and (
+                    (
+                        (
+                            isinstance(external, k[0])
+                            or external == k[0]
+                            and isinstance(internal, k[1])
+                            or internal == k[1]
+                        )
+                    )
+                )
+            ):
+                return v
 
     def find_agreement(self, external: Any, internal: Any) -> Union[Switch, BaseSwitch]: # 可以改进
 
         type_external = type(external)
-        res = self.get_switch(external, internal) # 已存在
-        if res:
+        if res := self.get_switch(external, internal):
             return res
         agreements = self.get_agreement()
         temp_a = [i['switch'] for i in agreements if i['external'] == type_external]
@@ -124,12 +134,24 @@ class Agreement(BaseAgreement):
         temp_c = [i['switch'] for i in agreements if isinstance(i['external'], str) and i['external'] == type_external.__name__]
         ex_temp = temp_a + temp_b + temp_c
         ex_temp = set(ex_temp)
-        temp_a = set([i['switch'] for i in agreements if i['internal'] == internal])
-        temp_b = set([i['switch'] for i in agreements if (not isinstance(i['internal'], str)) and i['internal'].__name__ == internal])
-        temp_c = set([i['switch'] for i in agreements if isinstance(i['internal'], str) and (not isinstance(internal, str)) and i['internal'] == internal.__name__])
+        temp_a = {i['switch'] for i in agreements if i['internal'] == internal}
+        temp_b = {
+            i['switch']
+            for i in agreements
+            if (not isinstance(i['internal'], str))
+            and i['internal'].__name__ == internal
+        }
+
+        temp_c = {
+            i['switch']
+            for i in agreements
+            if isinstance(i['internal'], str)
+            and (not isinstance(internal, str))
+            and i['internal'] == internal.__name__
+        }
+
         in_temp = temp_a | temp_b | temp_c
-        temp = ex_temp & in_temp
-        if temp:
+        if temp := ex_temp & in_temp:
             return temp.pop()
         raise SwitchEmptyError(reason=f'This Switch<{type_external} {internal}> object not in Agreement.')
 

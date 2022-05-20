@@ -47,7 +47,7 @@ def iterproduct(cls: "GranularMeta") -> Union[dict, list]:
 class GranularMeta(ABCMeta):
     '''实体抽象元类'''
 
-    def __iter__(cls):
+    def __iter__(self):
         '''终端子域'''
         return (i for i in gc.get_objects() if isinstance(i, cls))
     
@@ -69,32 +69,32 @@ class GranularMeta(ABCMeta):
         yield list(d.keys())
         yield from putk(list(d.values()))        
 
-    def __relationship__(cls, typeset = False) -> Iterator[Union[Set, Tuple]]:
+    def __relationship__(self, typeset = False) -> Iterator[Union[Set, Tuple]]:
         '''关系'''
         if typeset:
-            return list(map(set, product(*(i for i in cls.__subclasses__()))))
-        return list(product(*(i for i in cls.__subclasses__())))
+            return list(map(set, product(*iter(cls.__subclasses__()))))
+        return list(product(*iter(cls.__subclasses__())))
     
-    def __relationship_map__(cls):
+    def __relationship_map__(self):
         '''关系映射'''
         return [list(product(*i)) for i in cls.__relationship__()]
     
-    def __product__(cls):
+    def __product__(self):
         '''笛卡尔积'''
-        return list(product(*cls.structure()[cls].keys()))
+        return list(product(*self.structure()[self].keys()))
 
-    def combinations(cls, minimum = 1, typeset: bool = False) -> Iterator[Union[Set, Tuple]]:
+    def combinations(self, minimum = 1, typeset: bool = False) -> Iterator[Union[Set, Tuple]]:
         '''所有组合'''
         res = []
-        for i in range(minimum, len(cls.next()) + 1):
-            res += list(combinations(cls.next(), i))
+        for i in range(minimum, len(self.next()) + 1):
+            res += list(combinations(self.next(), i))
         if typeset:
             return list(map(set, res))
         return res
 
-    def next(cls):
+    def next(self):
         '''子域'''
-        return list(iterproduct(cls).keys())
+        return list(iterproduct(self).keys())
 
     def structure(cls, json: bool = False) -> Dict[Union[str, "GranularMeta"], Iterable]:
         '''实体结构'''
@@ -127,12 +127,12 @@ class GranularMeta(ABCMeta):
             return {cls: _next(subclasses)}
         return {str(cls): _next_json(subclasses)}
 
-    def save_structure(cls, path: str = None):
+    def save_structure(self, path: str = None):
         '''保存实体结构'''
         if not path:
             path = os.path.join(mainfile, "structure.json")
         with open(path, "w", encoding='utf-8') as f:
-            f.write(json.dumps(cls.structure(json = True), ensure_ascii=False, indent=4))
+            f.write(json.dumps(self.structure(json = True), ensure_ascii=False, indent=4))
 
 class BaseSubstance(metaclass = GranularMeta):
     '''实体抽象基类'''
@@ -160,10 +160,7 @@ class Ordinary(Region):
     
     def __init__(self, name: str, subiter: Iterable[Any] = None, reference: bool = False) -> None:
         self.name = name
-        if subiter:
-            self.iter = Container(subiter)
-        else:
-            self.iter = Container()
+        self.iter = Container(subiter) if subiter else Container()
         if reference:
             setattr(self.__class__, name, self)
 

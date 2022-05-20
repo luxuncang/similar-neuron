@@ -52,34 +52,24 @@ class Adapter(ABC):
 
     def findtype(self, cls: str) -> Any:
         '''查找类型'''
-        for i in self._dependent.keys():
-            if i.__name__ == cls:
-                return i
-        return cls
+        return next((i for i in self._dependent.keys() if i.__name__ == cls), cls)
 
     @staticmethod
     def paramdefault(default) -> Any:
         '''默认参数'''
-        if default == inspect.Parameter.empty:
-            return None
-        return default
+        return None if default == inspect.Parameter.empty else default
 
 class Frame(ABC):
     '''Frame'''
 
     def findtype(self, cls: str) -> Any:
         '''查找类型'''
-        for i in self._dependent.keys():
-            if i.__name__ == cls:
-                return i
-        return cls
+        return next((i for i in self._dependent.keys() if i.__name__ == cls), cls)
 
     @staticmethod
     def paramdefault(default) -> Any:
         '''默认参数'''
-        if default == inspect.Parameter.empty:
-            return None
-        return default
+        return None if default == inspect.Parameter.empty else default
 
 # 事件函数基类
 class AdapterEvent(Adapter, BaseModel):
@@ -107,20 +97,12 @@ class AdapterEvent(Adapter, BaseModel):
     def __eventspace__(self) -> Dict[str, Any]:
         space,self._dependent = {}, {}
         frame = inspect.currentframe()
-        space.update(frame.f_back.f_back.f_locals)
-        self._dependent.update({EventName: self.__class__.__name__})
-        self._dependent.update(
-            {type(j): j for _, j in space.items()}
-        )
-        self._dependent.update(
-            {type(j): j for _, j in self.dict().items()}
-        )
-        self._dependent.update(
-            {type(i): i for i in self._callmethod(
-                self.coupler
-                )
-            }
-        )
+        space |= frame.f_back.f_back.f_locals
+        self._dependent[EventName] = self.__class__.__name__
+        self._dependent |= {type(j): j for _, j in space.items()}
+        self._dependent |= {type(j): j for _, j in self.dict().items()}
+        self._dependent |= {type(i): i for i in self._callmethod(self.coupler)}
+
         return space
 
     def __call__(self, *args, **kwargs) -> Any:
@@ -142,12 +124,16 @@ class AdapterEvent(Adapter, BaseModel):
         f = inspect.signature(func)
         for name, param in f.parameters.items():
             pat = param.annotation
-            if pat != inspect.Parameter.empty:
-                if isinstance(pat, str):
-                    pat = self.findtype(pat)
-                res[name] = self._dependent.get(pat) if not self._dependent.get(pat) is None else self.paramdefault(param.default)
-            else:
+            if pat == inspect.Parameter.empty:
                 raise AnnotationEmpty(reason = f'{name} annotation is empty!')
+            if isinstance(pat, str):
+                pat = self.findtype(pat)
+            res[name] = (
+                self._dependent.get(pat)
+                if self._dependent.get(pat) is not None
+                else self.paramdefault(param.default)
+            )
+
         return res
 
     def _callmethod(self, func: Callable) -> Any:
@@ -200,18 +186,15 @@ class AsyncAdapterEvent(Adapter, BaseModel):
     async def __eventspace__(self) -> Dict[str, Any]:
         space,self._dependent = {}, {}
         frame = inspect.currentframe()
-        space.update(frame.f_back.f_back.f_locals)
-        self._dependent.update({EventName: self.__class__.__name__})
-        self._dependent.update(
-            {type(j):j for _,j in space.items()}
-            )
-        self._dependent.update(
-            {type(j):j for i,j in self.dict().items() if i != '_dependent'}
-            )
+        space |= frame.f_back.f_back.f_locals
+        self._dependent[EventName] = self.__class__.__name__
+        self._dependent |= {type(j):j for _,j in space.items()}
+        self._dependent |= {
+            type(j): j for i, j in self.dict().items() if i != '_dependent'
+        }
+
         T_coupler =  await self._callmethod(self.coupler)
-        self._dependent.update(
-            {type(i):i for i in T_coupler}
-            )
+        self._dependent |= {type(i):i for i in T_coupler}
         return space
 
     async def __call__(self) -> Any:
@@ -234,12 +217,16 @@ class AsyncAdapterEvent(Adapter, BaseModel):
         f = inspect.signature(func)
         for name, param in f.parameters.items():
             pat = param.annotation
-            if pat != inspect.Parameter.empty:
-                if isinstance(pat, str):
-                    pat = self.findtype(pat)
-                res[name] = self._dependent.get(pat) if not self._dependent.get(pat) is None else self.paramdefault(param.default)
-            else:
+            if pat == inspect.Parameter.empty:
                 raise AnnotationEmpty(reason = f'{name} annotation is empty!')
+            if isinstance(pat, str):
+                pat = self.findtype(pat)
+            res[name] = (
+                self._dependent.get(pat)
+                if self._dependent.get(pat) is not None
+                else self.paramdefault(param.default)
+            )
+
         return res
 
     async def _callmethod(self, func: Callable) -> Any:
@@ -279,16 +266,10 @@ class FramePenetration(Frame):
         if not introduce:
             introduce = {}
         frame = inspect.currentframe()
-        space.update(frame.f_back.f_locals)
-        self._dependent.update(
-            {type(j):j for _,j in space.items()}
-            )
-        self._dependent.update(
-            {type(i):i for i in args}
-            )
-        self._dependent.update(
-            {type(j):j for _,j in introduce.items()}
-            )
+        space |= frame.f_back.f_locals
+        self._dependent |= {type(j):j for _,j in space.items()}
+        self._dependent |= {type(i):i for i in args}
+        self._dependent |= {type(j):j for _,j in introduce.items()}
 
     def __call__(self, *funcs: Callable) -> Any:
         return [self._callmethod(func) for func in funcs]
@@ -299,12 +280,16 @@ class FramePenetration(Frame):
         f = inspect.signature(func)
         for name, param in f.parameters.items():
             pat = param.annotation
-            if pat != inspect.Parameter.empty:
-                if isinstance(pat, str):
-                    pat = self.findtype(pat)
-                res[name] = self._dependent.get(pat) if not self._dependent.get(pat) is None else self.paramdefault(param.default)
-            else:
+            if pat == inspect.Parameter.empty:
                 raise AnnotationEmpty(reason = f'{name} annotation is empty!')
+            if isinstance(pat, str):
+                pat = self.findtype(pat)
+            res[name] = (
+                self._dependent.get(pat)
+                if self._dependent.get(pat) is not None
+                else self.paramdefault(param.default)
+            )
+
         return res
 
     def _callmethod(self, func: Callable) -> Any:
@@ -324,16 +309,10 @@ class AsyncFramePenetration(Frame):
         if not introduce:
             introduce = {}
         frame = inspect.currentframe()
-        space.update(frame.f_back.f_locals)
-        self._dependent.update(
-            {type(j):j for _,j in space.items()}
-            )
-        self._dependent.update(
-            {type(i):i for i in args}
-            )
-        self._dependent.update(
-            {type(j):j for _,j in introduce.items()}
-            )
+        space |= frame.f_back.f_locals
+        self._dependent |= {type(j):j for _,j in space.items()}
+        self._dependent |= {type(i):i for i in args}
+        self._dependent |= {type(j):j for _,j in introduce.items()}
 
     async def __call__(self, *funcs: Callable, concurrent: bool = False) -> Any:
         if concurrent:
@@ -346,12 +325,16 @@ class AsyncFramePenetration(Frame):
         f = inspect.signature(func)
         for name, param in f.parameters.items():
             pat = param.annotation
-            if pat != inspect.Parameter.empty:
-                if isinstance(pat, str):
-                    pat = self.findtype(pat)
-                res[name] = self._dependent.get(pat) if not self._dependent.get(pat) is None else self.paramdefault(param.default)
-            else:
+            if pat == inspect.Parameter.empty:
                 raise AnnotationEmpty(reason = f'{name} annotation is empty!')
+            if isinstance(pat, str):
+                pat = self.findtype(pat)
+            res[name] = (
+                self._dependent.get(pat)
+                if self._dependent.get(pat) is not None
+                else self.paramdefault(param.default)
+            )
+
         return res
 
     async def _callmethod(self, func: Callable) -> Any:

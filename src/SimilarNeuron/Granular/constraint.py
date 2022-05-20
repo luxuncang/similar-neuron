@@ -106,19 +106,23 @@ class BaseContext(BaseModel):
         contactdict:dict = contact.filterNone
         if self.interfaceType != set(contactdict.keys()):
             raise InterfaceTypeError()
-        for k,v in contactdict.items():
-            if v not in self.dict()[k]:
-                return False == self.direction
-        return True == self.direction
+        return next(
+            (
+                self.direction == False
+                for k, v in contactdict.items()
+                if v not in self.dict()[k]
+            ),
+            self.direction == True,
+        )
 
     def location(self, contact: "BaseContext") -> Union[bool, "BaseContext"]:
         '''定位'''
         contactdict:dict = contact.filterNone
         for k,v in contactdict.items():
-            if not k in self.filterNone:
+            if k not in self.filterNone:
                 raise InterfaceTypeError()
         for k,v in contactdict.items():
-            if not v in self.dict()[k]:
+            if v not in self.dict()[k]:
                 raise InterfaceTypeError()
         return self
 
@@ -137,8 +141,7 @@ class BaseMapperEvent(Ordinary):
     def rematch(self, contact: BaseContext, asyn: bool = False) -> Callable:
         def allmatch(context: BaseContext) -> bool:
             try:
-                res =  context.rematch(contact = contact)
-                return res
+                return context.rematch(contact = contact)
             except InterfaceTypeError:
                 return False
         for i in self.iter:
@@ -157,8 +160,7 @@ class BaseMapperEvent(Ordinary):
     def match(self, contact: BaseContext) -> bool:
         def allmatch(context: BaseContext) -> bool:
             try:
-                res =  context.rematch(contact = contact)
-                return res
+                return context.rematch(contact = contact)
             except InterfaceTypeError:
                 return False
         for i in self.iter:
@@ -171,8 +173,7 @@ class BaseMapperEvent(Ordinary):
         result = []
         def allmatch(context: BaseContext) -> bool:
             try:
-                res =  context.location(contact = contact)
-                return res
+                return context.location(contact = contact)
             except InterfaceTypeError:
                 ...
         for i in self.iter:

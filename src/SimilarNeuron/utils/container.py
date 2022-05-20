@@ -8,10 +8,7 @@ class TimeBoundCache():
         self._timeout = timeout
     
     def add(self, k, v, timeout : int = None):
-        if timeout == None:
-            t = self._timeout
-        else: 
-            t = timeout
+        t = self._timeout if timeout is None else timeout
         self._container.append({'k': k, 'v': v, 'puttime': datetime.now() + timedelta(seconds=t)})
         self._gcCache()
     
@@ -66,10 +63,7 @@ class TimeList():
         self._timeout = timeout
     
     def add(self, v, timeout : int = None):
-        if timeout == None:
-            t = self._timeout
-        else: 
-            t = timeout
+        t = self._timeout if timeout is None else timeout
         self._container.append({'v': v, 'puttime': datetime.now() + timedelta(seconds=t)})
         self._gcCache()
     
